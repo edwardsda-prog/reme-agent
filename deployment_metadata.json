@@ -1,6 +1,6 @@
 {
   "remote_agent_runtime_id": "projects/284046449012/locations/europe-west1/reasoningEngines/6397856951400660992",
-  "deployment_timestamp": "2026-10-29T18:09:55.337212+00:00",
+  "deployment_timestamp": "2026-10-29T19:16:33.095158+00:00",
   "deployment_target": "agent_runtime",
   "is_a2a": true,
   "language": "python",

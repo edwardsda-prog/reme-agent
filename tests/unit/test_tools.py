@@ -544,5 +544,98 @@ def test_issue_04_concise_publish_output_and_gcs_prompt_image_upload() -> None:
     assert "Agent Execution Trace" not in sanitized_text
 
 
+def test_issue_04_gemini_enterprise_uploaded_file_tag_and_discovery_engine_download() -> None:
+    """Verifies Gemini Enterprise `<start_of_user_uploaded_file: ...>` marker & Discovery Engine `:downloadFile?alt=media` extraction."""
+    from typing import Any
+    from google.adk.models.llm_request import LlmRequest
+    from google.genai import types
+    from app.agent import fast_path_before_model_callback
+    import app.tools as tools_mod
+
+    fake_jpeg = b"\xff\xd8\xff\xe1\x01gExif\x00\x00MM\x00*GEMINI-ENTERPRISE-PHOTO"
+    filename = "1fd64153-2c1b-43f7-a614-a570663fbcc44158047231548253371.jpg"
+    upstream_sid = "9066417323575841727"
+
+    ctx = DummyToolContext({"agent_engine:upstream_session_id": upstream_sid})
+    req = LlmRequest(
+        contents=[
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_text(
+                        text=f"<start_of_user_uploaded_file: {filename}>\n"
+                    ),
+                    types.Part.from_text(
+                        text=f"<end_of_user_uploaded_file: {filename}>\n"
+                    ),
+                    types.Part.from_text(
+                        text="FV432 K60 low oil pressure at Sector Bravo-4"
+                    ),
+                ],
+            )
+        ]
+    )
+
+    mock_list_resp = MagicMock()
+    mock_list_resp.status_code = 200
+    mock_list_resp.json.return_value = {
+        "fileMetadata": [
+            {
+                "fileId": "10261233783014647641",
+                "name": filename,
+                "mimeType": "image/jpeg",
+                "byteSize": "3600266",
+                "session": f"projects/284046449012/locations/eu/collections/default_collection/engines/pixel-mobile-demos_1793177711952/sessions/{upstream_sid}",
+            }
+        ]
+    }
+    mock_dl_resp = MagicMock()
+    mock_dl_resp.status_code = 200
+    mock_dl_resp.content = fake_jpeg
+
+    def fake_get(url: str, **kwargs: Any) -> Any:
+        if ":listSessionFileMetadata" in url:
+            return mock_list_resp
+        if ":downloadFile" in url and "alt=media" in url:
+            return mock_dl_resp
+        raise AssertionError(f"Unexpected GET URL: {url}")
+
+    mock_storage = MagicMock()
+    mock_bucket = MagicMock()
+    mock_blob = MagicMock()
+    mock_storage.bucket.return_value = mock_bucket
+    mock_bucket.blob.return_value = mock_blob
+
+    with patch.object(tools_mod, "_STORAGE_CLIENT", mock_storage), patch.object(
+        tools_mod, "_get_access_token", return_value="fake-oauth-token"
+    ), patch("app.tools.requests.get", side_effect=fake_get):
+        res = fast_path_before_model_callback(ctx, req)
+        assert res is None
+        assert ctx.state.get("has_attached_photo") is True
+        assert ctx.state.get("uploaded_filename") == filename
+        assert ctx.state.get("prompt_image_gcs_uri", "").startswith(
+            "gs://antig-dave-reme-ticket-images-eu/tickets/ticket-img-"
+        )
+        assert ctx.state.get("prompt_image_url", "").startswith(
+            "/api/ticket-image/tickets/ticket-img-"
+        )
+        mock_blob.upload_from_string.assert_called_once()
+        # Verify the downloaded image bytes were also injected into llm_request.contents for visual triage
+        assert any(
+            getattr(p, "inline_data", None) is not None
+            for p in req.contents[0].parts
+        )
+
+        # Verify publish_ticket_to_chat attaches the downloaded image to both Cloud Run and BigQuery
+        diag = diagnose_and_resolve_grid(
+            fault_query="FV432 K60 low oil pressure at Sector Bravo-4",
+            spoken_sector_grid="Sector Bravo-4",
+            tool_context=ctx,
+        )
+        assert diag["image_gcs_uri"] == ctx.state["prompt_image_gcs_uri"]
+        assert diag["image_url"] == ctx.state["prompt_image_url"]
+
+
+
 
 
