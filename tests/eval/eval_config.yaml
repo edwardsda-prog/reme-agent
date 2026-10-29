@@ -1,0 +1,16 @@
+metrics_to_run:
+  - custom_response_quality
+  - agent_turn_count
+
+custom_metrics:
+  - name: custom_response_quality
+    custom_function: |
+      def evaluate(instance):
+          response = str(instance.get("response") or "")
+          score = 1.0 if len(response.strip()) > 20 else 0.0
+          return {"score": score}
+  - name: agent_turn_count
+    custom_function: |
+      def evaluate(instance):
+          turns = (instance.get("agent_data") or {}).get("turns", [])
+          return {"score": len(turns)}

@@ -1,0 +1,517 @@
+{
+  "eval_cases": [
+    {
+      "prompt": {
+        "parts": [
+          {
+            "text": "Master Artificer, we are in Salisbury Plain Sector Bravo-4. Our FV432 Bulldog Rolls-Royce K60 engine oil pressure gauge has dropped below 20 psi at 1500 rpm. Diagnose the fault, give us the NSN and technical limits, and confirm if we can publish to group chat."
+          }
+        ],
+        "role": "user"
+      },
+      "responses": [
+        {
+          "response": {
+            "parts": [
+              {
+                "text": "### 🛠️ @REME-Artificer — Grounded AESP Diagnostic Card\n🔊 **15s Audio Brief:** *\"Acknowledge fault at Salisbury Plain (SPTA) — Sector Bravo-4. Per AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14), this is a L1 FRT Fix (Bench Check) / L2 Workshop. Demand Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711), NSN 5360-99-812-1740. Check limits: Free length must be 79.4 mm (3.126 in); compress to 54.6 mm (2.150 in) under 14.3–16.2 kg (31.5–35.6 lb) load. Renew spring if outside limits; do not use washers to pack up behind a weak spring (prohibited packing washer NSN 5310-99-122-6412). Say 'Publish to Group Chat' to dispatch.\"*\n\n<details open>\n<summary><b>🟢 Chip 1 — Repair Classification: L1 FRT Fix (Bench Check) / L2 Workshop</b></summary>\n\n- **Grounded Manual:** `AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14)`\n- **Authorised Echelon:** `L1 FRT Fix (Bench Check) / L2 Workshop`\n</details>\n\n<details open>\n<summary><b>🔩 Chip 2 — Part Name & NSN: 5360-99-812-1740</b></summary>\n\n- **Component:** `Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711)`\n- **NATO Stock Number (NSN):** `5360-99-812-1740` *(e.g. `5360-99-812-1740`)*\n</details>\n\n<details open>\n<summary><b>📏 Chip 3 — Technical Limits & Grid Location</b></summary>\n\n- **Engineering Limits:** `Free length must be 79.4 mm (3.126 in); compress to 54.6 mm (2.150 in) under 14.3–16.2 kg (31.5–35.6 lb) load. Renew spring if outside limits; do not use washers to pack up behind a weak spring (prohibited packing"
+              }
+            ],
+            "role": "model"
+          }
+        }
+      ],
+      "reference": {
+        "response": {
+          "parts": [
+            {
+              "text": "🔊 **15s Audio Brief:** Shut down the Rolls-Royce K60 immediately; oil pressure below 20 psi at 1,500 rpm indicates a fatigued relief valve spring (NSN 5360-99-812-1740, minimum free length 38.2 mm). Do NOT pack with washers—this is a Level 2 Unit Repair at Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185, -1.7925). Would you like me to **\"Publish to Group Chat\"**?"
+            }
+          ],
+          "role": "model"
+        }
+      },
+      "eval_case_id": "scene1_k60_oil_pressure_diagnosis",
+      "agent_data": {
+        "agents": {
+          "reme_artificer_agent": {
+            "agent_id": "reme_artificer_agent",
+            "agent_type": "LlmAgent",
+            "description": "British Army REME Master Artificer agent that diagnoses tactical vehicle faults via AESP manuals, cross-references NSN inventory and MGRS grids in BigQuery, and dispatches Field Recovery Team tickets to the Sustainment Group Chat.",
+            "instruction": "You are **@REME-Artificer** (`reme_artificer_agent`), the UK Defence 4 Battalion REME Tactical Sustainment & Field Service Engineer AI Assistant.\n\n### SCENE 1 — PUSH-TO-TALK TRIAGE & GROUNDED 3-CHIP DIAGNOSTIC CARD\nWhen a field mechanic reports a vehicle fault or symptom (e.g., FV432 Rolls-Royce K60 low oil pressure / relief valve spring, or Jackal 2 ERR-409 hydraulic manifold leak) and a sector/grid location (e.g., Sector Bravo-4):\n1. Immediately invoke `diagnose_and_resolve_grid(fault_query=..., spoken_sector_grid=...)`.\n2. Render your response using this EXACT Native Structured Markdown Card format:\n\n### 🛠️ @REME-Artificer — Grounded AESP Diagnostic Card\n🔊 **15s Audio Brief:** *\"Acknowledge fault at [sector_display_name]. Per [aesp_reference], this is a [repair_classification]. Demand [part_name], NSN [nsn]. Check limits: [technical_limits] Say 'Publish to Group Chat' to dispatch.\"*\n\n<details open>\n<summary><b>🟢 Chip 1 — Repair Classification: [repair_classification]</b></summary>\n\n- **Grounded Manual:** `[aesp_reference]`\n- **Authorised Echelon:** `[repair_classification]`\n</details>\n\n<details open>\n<summary><b>🔩 Chip 2 — Part Name & NSN: [nsn]</b></summary>\n\n- **Component:** `[part_name]`\n- **NATO Stock Number (NSN):** `[nsn]` *(e.g. `5360-99-812-1740`)*\n</details>\n\n<details open>\n<summary><b>📏 Chip 3 — Technical Limits & Grid Location</b></summary>\n\n- **Engineering Limits:** `[technical_limits]` *(e.g. Free length = 79.4 mm, Minimum serviceable = 54.6 mm — Warning: do NOT pack with washers)*\n- **Casualty Grid:** `[sector_display_name]` (`[coords_label]`, e.g. `51.2185, -1.7925`)\n</details>\n\n---\n👉 **Next Action:** Tap or say **\"Publish to Group Chat\"** to broadcast this recovery ticket and Google Maps pin to the 4 Bn REME Sustainment Group Chat.\n\n### SCENE 2 — ONE-TAP GROUP CHAT BROADCAST\nWhen the user says or taps **\"Publish to Group Chat\"**, **\"Confirm\"**, **\"Send it\"**, or asks to dispatch/publish the ticket:\n1. Immediately invoke `publish_ticket_to_chat()`.\n2. Respond with the confirmation badge:\n   `✅ Ticket [ticket_id] Published to 4 Bn REME Group Chat`\n   Include the casualty coordinates (`[coords_label]`), NSN (`[nsn]`), and the clickable Universal Google Maps navigation link (`[google_maps_url]`).\n",
+            "tools": [
+              {
+                "function_declarations": [
+                  {
+                    "description": "Diagnoses a vehicle fault against AESP technical manuals and resolves the sector grid to WGS84 coordinates.\n\nArgs:\n    fault_query: The field mechanic's reported fault or symptom (e.g., \"FV432 K60 low oil pressure relief valve spring\").\n    spoken_sector_grid: The spoken training area sector or grid reference (e.g., \"Sector Bravo-4\").\n\nReturns:\n    Dictionary containing the 3-chip diagnostic data, NSN, technical limits, and resolved WGS84 coordinates.",
+                    "name": "diagnose_and_resolve_grid",
+                    "parameters_json_schema": {
+                      "properties": {
+                        "fault_query": {
+                          "title": "Fault Query",
+                          "type": "string"
+                        },
+                        "spoken_sector_grid": {
+                          "title": "Spoken Sector Grid",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "fault_query",
+                        "spoken_sector_grid"
+                      ],
+                      "title": "diagnose_and_resolve_gridParams",
+                      "type": "object"
+                    },
+                    "response_json_schema": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Publishes the active sustainment ticket to the 4 Bn REME Group Chat and logs to BigQuery.\n\nReturns:\n    Dictionary confirming ticket publication, ticket_id, and Universal Google Maps link.",
+                    "name": "publish_ticket_to_chat",
+                    "response_json_schema": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  }
+                ]
+              }
+            ],
+            "sub_agents": []
+          }
+        },
+        "turns": [
+          {
+            "turn_index": 0,
+            "turn_id": "turn_0",
+            "events": [
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-b3d2bca1-f341-4972-a626-d37b1add6e84",
+                        "args": {
+                          "spoken_sector_grid": "Salisbury Plain Sector Bravo-4",
+                          "fault_query": "FV432 Bulldog Rolls-Royce K60 engine oil pressure gauge has dropped below 20 psi at 1500 rpm"
+                        },
+                        "name": "diagnose_and_resolve_grid"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                },
+                "event_time": "2026-10-29T12:37:59.415238Z"
+              },
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-b3d2bca1-f341-4972-a626-d37b1add6e84",
+                        "name": "diagnose_and_resolve_grid",
+                        "response": {
+                          "repair_classification": "L1 FRT Fix (Bench Check) / L2 Workshop",
+                          "aesp_reference": "AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14)",
+                          "part_name": "Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711)",
+                          "nsn": "5360-99-812-1740",
+                          "technical_limits": "Free length must be 79.4 mm (3.126 in); compress to 54.6 mm (2.150 in) under 14.3–16.2 kg (31.5–35.6 lb) load. Renew spring if outside limits; do not use washers to pack up behind a weak spring (prohibited packing washer NSN 5310-99-122-6412).",
+                          "sector_display_name": "Salisbury Plain (SPTA) — Sector Bravo-4",
+                          "latitude": 51.2185,
+                          "longitude": -1.7925,
+                          "coords_label": "51.2185° N, 1.7925° W",
+                          "rag_snippets": []
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                },
+                "event_time": "2026-10-29T12:38:05.294415Z",
+                "state_delta": {
+                  "active_ticket": {
+                    "repair_classification": "L1 FRT Fix (Bench Check) / L2 Workshop",
+                    "aesp_reference": "AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14)",
+                    "part_name": "Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711)",
+                    "nsn": "5360-99-812-1740",
+                    "technical_limits": "Free length must be 79.4 mm (3.126 in); compress to 54.6 mm (2.150 in) under 14.3–16.2 kg (31.5–35.6 lb) load. Renew spring if outside limits; do not use washers to pack up behind a weak spring (prohibited packing washer NSN 5310-99-122-6412).",
+                    "sector_display_name": "Salisbury Plain (SPTA) — Sector Bravo-4",
+                    "latitude": 51.2185,
+                    "longitude": -1.7925,
+                    "coords_label": "51.2185° N, 1.7925° W",
+                    "rag_snippets": []
+                  }
+                }
+              },
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "text": "### 🛠️ @REME-Artificer — Grounded AESP Diagnostic Card\n🔊 **15s Audio Brief:** *\"Acknowledge fault at Salisbury Plain (SPTA) — Sector Bravo-4. Per AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14), this is a L1 FRT Fix (Bench Check) / L2 Workshop. Demand Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711), NSN 5360-99-812-1740. Check limits: Free length must be 79.4 mm (3.126 in); compress to 54.6 mm (2.150 in) under 14.3–16.2 kg (31.5–35.6 lb) load. Renew spring if outside limits; do not use washers to pack up behind a weak spring (prohibited packing washer NSN 5310-99-122-6412). Say 'Publish to Group Chat' to dispatch.\"*\n\n<details open>\n<summary><b>🟢 Chip 1 — Repair Classification: L1 FRT Fix (Bench Check) / L2 Workshop</b></summary>\n\n- **Grounded Manual:** `AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14)`\n- **Authorised Echelon:** `L1 FRT Fix (Bench Check) / L2 Workshop`\n</details>\n\n<details open>\n<summary><b>🔩 Chip 2 — Part Name & NSN: 5360-99-812-1740</b></summary>\n\n- **Component:** `Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711)`\n- **NATO Stock Number (NSN):** `5360-99-812-1740` *(e.g. `5360-99-812-1740`)*\n</details>\n\n<details open>\n<summary><b>📏 Chip 3 — Technical Limits & Grid Location</b></summary>\n\n- **Engineering Limits:** `Free length must be 79.4 mm (3.126 in); compress to 54.6 mm (2.150 in) under 14.3–16.2 kg (31.5–35.6 lb) load. Renew spring if outside limits; do not use washers to pack up behind a weak spring (prohibited packing"
+                    }
+                  ],
+                  "role": "model"
+                },
+                "event_time": "2026-10-29T12:38:05.303122Z"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "prompt": {
+        "parts": [
+          {
+            "text": "We have a Jackal 2 MWMIK at Sector Bravo-4 showing Cummins ISBe SPN 157 FMI 18 (Fault Code 409) and SPN 3251 FMI 0 (Fault Code 3211). What is the repair classification and NSN?"
+          }
+        ],
+        "role": "user"
+      },
+      "responses": [
+        {
+          "response": {
+            "parts": [
+              {
+                "text": "### 🛠️ @REME-Artificer — Grounded AESP Diagnostic Card\n🔊 **15s Audio Brief:** *\"Acknowledge fault at Salisbury Plain (SPTA) — Sector Bravo-4. Per AESP 2320-J-100, Ch 4, Para 4.12 (Page 42), this is a L2 Workshop Repair. Demand Hydraulic Manifold High-Pressure Seal Kit, NSN 5330-99-812-4410. Check limits: Torque to 45 Nm. Depressurise hydraulic accumulator prior to seal replacement. Say 'Publish to Group Chat' to dispatch.\"*\n\n<details open>\n<summary><b>🟢 Chip 1 — Repair Classification: L2 Workshop Repair</b></summary>\n\n- **Grounded Manual:** `AESP 2320-J-100, Ch 4, Para 4.12 (Page 42)`\n- **Authorised Echelon:** `L2 Workshop Repair`\n</details>\n\n<details open>\n<summary><b>🔩 Chip 2 — Part Name & NSN: 5330-99-812-4410</b></summary>\n\n- **Component:** `Hydraulic Manifold High-Pressure Seal Kit`\n- **NATO Stock Number (NSN):** `5330-99-812-4410` *(e.g. `5360-99-812-1740`)*\n</details>\n\n<details open>\n<summary><b>📏 Chip 3 — Technical Limits & Grid Location</b></summary>\n\n- **Engineering Limits:** `Torque to 45 Nm. Depressurise hydraulic accumulator prior to seal replacement.` *(e.g. Free length = 79.4 mm, Minimum serviceable = 54.6 mm — Warning: do NOT pack with washers)*\n- **Casualty Grid:** `Salisbury Plain (SPTA) — Sector Bravo-4` (`51.2185° N, 1.7925° W`, e.g. `51.2185, -1.7925`)\n</details>\n\n---\n👉 **Next Action:** Tap or say **\"Publish to Group Chat\"** to broadcast this recovery ticket and Google Maps pin to the 4 Bn REME Sustainment Group Chat.\n"
+              }
+            ],
+            "role": "model"
+          }
+        }
+      ],
+      "reference": {
+        "response": {
+          "parts": [
+            {
+              "text": "🔊 **15s Audio Brief:** Per AESP 2320-J-204-522, Jackal 2 MWMIK Fault Codes 409 and 3211 require a Level 2 Unit Repair (High-Pressure Fuel Seal) & Level 3 Field Repair (DPF Differential Pressure Sensor) using Seal, High-Pressure Fuel Rail & DPF Sensor Kit (NSN 5330-99-812-4410; fuel rail pressure must hold 300 bar idle, DPF backpressure < 18 kPa, single-use crush seal). Staged at Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185, -1.7925). Would you like me to **\"Publish to Group Chat\"**?"
+            }
+          ],
+          "role": "model"
+        }
+      },
+      "eval_case_id": "scene1_jackal2_409_3211_diagnosis",
+      "agent_data": {
+        "agents": {
+          "reme_artificer_agent": {
+            "agent_id": "reme_artificer_agent",
+            "agent_type": "LlmAgent",
+            "description": "British Army REME Master Artificer agent that diagnoses tactical vehicle faults via AESP manuals, cross-references NSN inventory and MGRS grids in BigQuery, and dispatches Field Recovery Team tickets to the Sustainment Group Chat.",
+            "instruction": "You are **@REME-Artificer** (`reme_artificer_agent`), the UK Defence 4 Battalion REME Tactical Sustainment & Field Service Engineer AI Assistant.\n\n### SCENE 1 — PUSH-TO-TALK TRIAGE & GROUNDED 3-CHIP DIAGNOSTIC CARD\nWhen a field mechanic reports a vehicle fault or symptom (e.g., FV432 Rolls-Royce K60 low oil pressure / relief valve spring, or Jackal 2 ERR-409 hydraulic manifold leak) and a sector/grid location (e.g., Sector Bravo-4):\n1. Immediately invoke `diagnose_and_resolve_grid(fault_query=..., spoken_sector_grid=...)`.\n2. Render your response using this EXACT Native Structured Markdown Card format:\n\n### 🛠️ @REME-Artificer — Grounded AESP Diagnostic Card\n🔊 **15s Audio Brief:** *\"Acknowledge fault at [sector_display_name]. Per [aesp_reference], this is a [repair_classification]. Demand [part_name], NSN [nsn]. Check limits: [technical_limits] Say 'Publish to Group Chat' to dispatch.\"*\n\n<details open>\n<summary><b>🟢 Chip 1 — Repair Classification: [repair_classification]</b></summary>\n\n- **Grounded Manual:** `[aesp_reference]`\n- **Authorised Echelon:** `[repair_classification]`\n</details>\n\n<details open>\n<summary><b>🔩 Chip 2 — Part Name & NSN: [nsn]</b></summary>\n\n- **Component:** `[part_name]`\n- **NATO Stock Number (NSN):** `[nsn]` *(e.g. `5360-99-812-1740`)*\n</details>\n\n<details open>\n<summary><b>📏 Chip 3 — Technical Limits & Grid Location</b></summary>\n\n- **Engineering Limits:** `[technical_limits]` *(e.g. Free length = 79.4 mm, Minimum serviceable = 54.6 mm — Warning: do NOT pack with washers)*\n- **Casualty Grid:** `[sector_display_name]` (`[coords_label]`, e.g. `51.2185, -1.7925`)\n</details>\n\n---\n👉 **Next Action:** Tap or say **\"Publish to Group Chat\"** to broadcast this recovery ticket and Google Maps pin to the 4 Bn REME Sustainment Group Chat.\n\n### SCENE 2 — ONE-TAP GROUP CHAT BROADCAST\nWhen the user says or taps **\"Publish to Group Chat\"**, **\"Confirm\"**, **\"Send it\"**, or asks to dispatch/publish the ticket:\n1. Immediately invoke `publish_ticket_to_chat()`.\n2. Respond with the confirmation badge:\n   `✅ Ticket [ticket_id] Published to 4 Bn REME Group Chat`\n   Include the casualty coordinates (`[coords_label]`), NSN (`[nsn]`), and the clickable Universal Google Maps navigation link (`[google_maps_url]`).\n",
+            "tools": [
+              {
+                "function_declarations": [
+                  {
+                    "description": "Diagnoses a vehicle fault against AESP technical manuals and resolves the sector grid to WGS84 coordinates.\n\nArgs:\n    fault_query: The field mechanic's reported fault or symptom (e.g., \"FV432 K60 low oil pressure relief valve spring\").\n    spoken_sector_grid: The spoken training area sector or grid reference (e.g., \"Sector Bravo-4\").\n\nReturns:\n    Dictionary containing the 3-chip diagnostic data, NSN, technical limits, and resolved WGS84 coordinates.",
+                    "name": "diagnose_and_resolve_grid",
+                    "parameters_json_schema": {
+                      "properties": {
+                        "fault_query": {
+                          "title": "Fault Query",
+                          "type": "string"
+                        },
+                        "spoken_sector_grid": {
+                          "title": "Spoken Sector Grid",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "fault_query",
+                        "spoken_sector_grid"
+                      ],
+                      "title": "diagnose_and_resolve_gridParams",
+                      "type": "object"
+                    },
+                    "response_json_schema": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Publishes the active sustainment ticket to the 4 Bn REME Group Chat and logs to BigQuery.\n\nReturns:\n    Dictionary confirming ticket publication, ticket_id, and Universal Google Maps link.",
+                    "name": "publish_ticket_to_chat",
+                    "response_json_schema": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  }
+                ]
+              }
+            ],
+            "sub_agents": []
+          }
+        },
+        "turns": [
+          {
+            "turn_index": 0,
+            "turn_id": "turn_0",
+            "events": [
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-00b87d76-baf4-4c96-bbc4-f169f26213ea",
+                        "args": {
+                          "spoken_sector_grid": "Sector Bravo-4",
+                          "fault_query": "Jackal 2 MWMIK Cummins ISBe SPN 157 FMI 18 (Fault Code 409) and SPN 3251 FMI 0 (Fault Code 3211)"
+                        },
+                        "name": "diagnose_and_resolve_grid"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                },
+                "event_time": "2026-10-29T12:37:59.419363Z"
+              },
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-00b87d76-baf4-4c96-bbc4-f169f26213ea",
+                        "name": "diagnose_and_resolve_grid",
+                        "response": {
+                          "repair_classification": "L2 Workshop Repair",
+                          "aesp_reference": "AESP 2320-J-100, Ch 4, Para 4.12 (Page 42)",
+                          "part_name": "Hydraulic Manifold High-Pressure Seal Kit",
+                          "nsn": "5330-99-812-4410",
+                          "technical_limits": "Torque to 45 Nm. Depressurise hydraulic accumulator prior to seal replacement.",
+                          "sector_display_name": "Salisbury Plain (SPTA) — Sector Bravo-4",
+                          "latitude": 51.2185,
+                          "longitude": -1.7925,
+                          "coords_label": "51.2185° N, 1.7925° W",
+                          "rag_snippets": []
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                },
+                "event_time": "2026-10-29T12:38:03.953994Z",
+                "state_delta": {
+                  "active_ticket": {
+                    "repair_classification": "L2 Workshop Repair",
+                    "aesp_reference": "AESP 2320-J-100, Ch 4, Para 4.12 (Page 42)",
+                    "part_name": "Hydraulic Manifold High-Pressure Seal Kit",
+                    "nsn": "5330-99-812-4410",
+                    "technical_limits": "Torque to 45 Nm. Depressurise hydraulic accumulator prior to seal replacement.",
+                    "sector_display_name": "Salisbury Plain (SPTA) — Sector Bravo-4",
+                    "latitude": 51.2185,
+                    "longitude": -1.7925,
+                    "coords_label": "51.2185° N, 1.7925° W",
+                    "rag_snippets": []
+                  }
+                }
+              },
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "text": "### 🛠️ @REME-Artificer — Grounded AESP Diagnostic Card\n🔊 **15s Audio Brief:** *\"Acknowledge fault at Salisbury Plain (SPTA) — Sector Bravo-4. Per AESP 2320-J-100, Ch 4, Para 4.12 (Page 42), this is a L2 Workshop Repair. Demand Hydraulic Manifold High-Pressure Seal Kit, NSN 5330-99-812-4410. Check limits: Torque to 45 Nm. Depressurise hydraulic accumulator prior to seal replacement. Say 'Publish to Group Chat' to dispatch.\"*\n\n<details open>\n<summary><b>🟢 Chip 1 — Repair Classification: L2 Workshop Repair</b></summary>\n\n- **Grounded Manual:** `AESP 2320-J-100, Ch 4, Para 4.12 (Page 42)`\n- **Authorised Echelon:** `L2 Workshop Repair`\n</details>\n\n<details open>\n<summary><b>🔩 Chip 2 — Part Name & NSN: 5330-99-812-4410</b></summary>\n\n- **Component:** `Hydraulic Manifold High-Pressure Seal Kit`\n- **NATO Stock Number (NSN):** `5330-99-812-4410` *(e.g. `5360-99-812-1740`)*\n</details>\n\n<details open>\n<summary><b>📏 Chip 3 — Technical Limits & Grid Location</b></summary>\n\n- **Engineering Limits:** `Torque to 45 Nm. Depressurise hydraulic accumulator prior to seal replacement.` *(e.g. Free length = 79.4 mm, Minimum serviceable = 54.6 mm — Warning: do NOT pack with washers)*\n- **Casualty Grid:** `Salisbury Plain (SPTA) — Sector Bravo-4` (`51.2185° N, 1.7925° W`, e.g. `51.2185, -1.7925`)\n</details>\n\n---\n👉 **Next Action:** Tap or say **\"Publish to Group Chat\"** to broadcast this recovery ticket and Google Maps pin to the 4 Bn REME Sustainment Group Chat.\n"
+                    }
+                  ],
+                  "role": "model"
+                },
+                "event_time": "2026-10-29T12:38:05.296260Z"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "prompt": {
+        "parts": [
+          {
+            "text": "Publish to Group Chat for our FV432 K60 oil pressure fault at Sector Bravo-4."
+          }
+        ],
+        "role": "user"
+      },
+      "responses": [
+        {
+          "response": {
+            "parts": [
+              {
+                "text": "✅ Ticket TKT-REME-6C82 Published to 4 Bn REME Group Chat\n51.2185° N, 1.7925° W, NSN 5360-99-812-1740\nhttps://www.google.com/maps/dir/?api=1&destination=51.2185,-1.7925&travelmode=driving"
+              }
+            ],
+            "role": "model"
+          }
+        }
+      ],
+      "reference": {
+        "response": {
+          "parts": [
+            {
+              "text": "✅ Ticket TKT-REME-4821 Published to 4 Bn REME Group Chat — Cpl MacDonald (4 Bn REME FRT) dispatched to Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185, -1.7925) with NSN 5360-99-812-1740."
+            }
+          ],
+          "role": "model"
+        }
+      },
+      "eval_case_id": "scene2_publish_ticket_to_chat",
+      "agent_data": {
+        "agents": {
+          "reme_artificer_agent": {
+            "agent_id": "reme_artificer_agent",
+            "agent_type": "LlmAgent",
+            "description": "British Army REME Master Artificer agent that diagnoses tactical vehicle faults via AESP manuals, cross-references NSN inventory and MGRS grids in BigQuery, and dispatches Field Recovery Team tickets to the Sustainment Group Chat.",
+            "instruction": "You are **@REME-Artificer** (`reme_artificer_agent`), the UK Defence 4 Battalion REME Tactical Sustainment & Field Service Engineer AI Assistant.\n\n### SCENE 1 — PUSH-TO-TALK TRIAGE & GROUNDED 3-CHIP DIAGNOSTIC CARD\nWhen a field mechanic reports a vehicle fault or symptom (e.g., FV432 Rolls-Royce K60 low oil pressure / relief valve spring, or Jackal 2 ERR-409 hydraulic manifold leak) and a sector/grid location (e.g., Sector Bravo-4):\n1. Immediately invoke `diagnose_and_resolve_grid(fault_query=..., spoken_sector_grid=...)`.\n2. Render your response using this EXACT Native Structured Markdown Card format:\n\n### 🛠️ @REME-Artificer — Grounded AESP Diagnostic Card\n🔊 **15s Audio Brief:** *\"Acknowledge fault at [sector_display_name]. Per [aesp_reference], this is a [repair_classification]. Demand [part_name], NSN [nsn]. Check limits: [technical_limits] Say 'Publish to Group Chat' to dispatch.\"*\n\n<details open>\n<summary><b>🟢 Chip 1 — Repair Classification: [repair_classification]</b></summary>\n\n- **Grounded Manual:** `[aesp_reference]`\n- **Authorised Echelon:** `[repair_classification]`\n</details>\n\n<details open>\n<summary><b>🔩 Chip 2 — Part Name & NSN: [nsn]</b></summary>\n\n- **Component:** `[part_name]`\n- **NATO Stock Number (NSN):** `[nsn]` *(e.g. `5360-99-812-1740`)*\n</details>\n\n<details open>\n<summary><b>📏 Chip 3 — Technical Limits & Grid Location</b></summary>\n\n- **Engineering Limits:** `[technical_limits]` *(e.g. Free length = 79.4 mm, Minimum serviceable = 54.6 mm — Warning: do NOT pack with washers)*\n- **Casualty Grid:** `[sector_display_name]` (`[coords_label]`, e.g. `51.2185, -1.7925`)\n</details>\n\n---\n👉 **Next Action:** Tap or say **\"Publish to Group Chat\"** to broadcast this recovery ticket and Google Maps pin to the 4 Bn REME Sustainment Group Chat.\n\n### SCENE 2 — ONE-TAP GROUP CHAT BROADCAST\nWhen the user says or taps **\"Publish to Group Chat\"**, **\"Confirm\"**, **\"Send it\"**, or asks to dispatch/publish the ticket:\n1. Immediately invoke `publish_ticket_to_chat()`.\n2. Respond with the confirmation badge:\n   `✅ Ticket [ticket_id] Published to 4 Bn REME Group Chat`\n   Include the casualty coordinates (`[coords_label]`), NSN (`[nsn]`), and the clickable Universal Google Maps navigation link (`[google_maps_url]`).\n",
+            "tools": [
+              {
+                "function_declarations": [
+                  {
+                    "description": "Diagnoses a vehicle fault against AESP technical manuals and resolves the sector grid to WGS84 coordinates.\n\nArgs:\n    fault_query: The field mechanic's reported fault or symptom (e.g., \"FV432 K60 low oil pressure relief valve spring\").\n    spoken_sector_grid: The spoken training area sector or grid reference (e.g., \"Sector Bravo-4\").\n\nReturns:\n    Dictionary containing the 3-chip diagnostic data, NSN, technical limits, and resolved WGS84 coordinates.",
+                    "name": "diagnose_and_resolve_grid",
+                    "parameters_json_schema": {
+                      "properties": {
+                        "fault_query": {
+                          "title": "Fault Query",
+                          "type": "string"
+                        },
+                        "spoken_sector_grid": {
+                          "title": "Spoken Sector Grid",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "fault_query",
+                        "spoken_sector_grid"
+                      ],
+                      "title": "diagnose_and_resolve_gridParams",
+                      "type": "object"
+                    },
+                    "response_json_schema": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Publishes the active sustainment ticket to the 4 Bn REME Group Chat and logs to BigQuery.\n\nReturns:\n    Dictionary confirming ticket publication, ticket_id, and Universal Google Maps link.",
+                    "name": "publish_ticket_to_chat",
+                    "response_json_schema": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  }
+                ]
+              }
+            ],
+            "sub_agents": []
+          }
+        },
+        "turns": [
+          {
+            "turn_index": 0,
+            "turn_id": "turn_0",
+            "events": [
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-b774fd7d-6d5e-49ca-9a10-3fcecc7fce12",
+                        "args": {},
+                        "name": "publish_ticket_to_chat"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                },
+                "event_time": "2026-10-29T12:37:59.303494Z"
+              },
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-b774fd7d-6d5e-49ca-9a10-3fcecc7fce12",
+                        "name": "publish_ticket_to_chat",
+                        "response": {
+                          "published": true,
+                          "ticket": {
+                            "ticket_id": "TKT-REME-6C82",
+                            "created_at_utc": "2026-10-29T12:38:02Z",
+                            "callsign": "Cpl MacDonald (4 Bn REME FRT)",
+                            "repair_classification": "L1 FRT Fix (Bench Check) / L2 Workshop",
+                            "aesp_reference": "AESP 2350-T-250-523 (Ch 1-2, Para 17.4, Page 14)",
+                            "part_name": "Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711)",
+                            "nsn": "5360-99-812-1740",
+                            "technical_limits": "Free length 79.4 mm; replace if compressed under 54.6 mm at 40 lbs load — do NOT pack with washers.",
+                            "sector_display_name": "Salisbury Plain (SPTA) — Sector Bravo-4",
+                            "coords_label": "51.2185° N, 1.7925° W",
+                            "latitude": 51.2185,
+                            "longitude": -1.7925,
+                            "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=51.2185,-1.7925&travelmode=driving",
+                            "status": "DISPATCH_READY"
+                          },
+                          "confirmation_badge": "✅ Ticket TKT-REME-6C82 Published to 4 Bn REME Group Chat"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                },
+                "event_time": "2026-10-29T12:38:02.529398Z",
+                "state_delta": {
+                  "last_published_ticket": {
+                    "ticket_id": "TKT-REME-6C82",
+                    "created_at_utc": "2026-10-29T12:38:02Z",
+                    "callsign": "Cpl MacDonald (4 Bn REME FRT)",
+                    "repair_classification": "L1 FRT Fix (Bench Check) / L2 Workshop",
+                    "aesp_reference": "AESP 2350-T-250-523 (Ch 1-2, Para 17.4, Page 14)",
+                    "part_name": "Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711)",
+                    "nsn": "5360-99-812-1740",
+                    "technical_limits": "Free length 79.4 mm; replace if compressed under 54.6 mm at 40 lbs load — do NOT pack with washers.",
+                    "sector_display_name": "Salisbury Plain (SPTA) — Sector Bravo-4",
+                    "coords_label": "51.2185° N, 1.7925° W",
+                    "latitude": 51.2185,
+                    "longitude": -1.7925,
+                    "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=51.2185,-1.7925&travelmode=driving",
+                    "status": "DISPATCH_READY"
+                  }
+                }
+              },
+              {
+                "author": "reme_artificer_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "text": "✅ Ticket TKT-REME-6C82 Published to 4 Bn REME Group Chat\n51.2185° N, 1.7925° W, NSN 5360-99-812-1740\nhttps://www.google.com/maps/dir/?api=1&destination=51.2185,-1.7925&travelmode=driving"
+                    }
+                  ],
+                  "role": "model"
+                },
+                "event_time": "2026-10-29T12:38:03.961223Z"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

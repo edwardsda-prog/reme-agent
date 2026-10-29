@@ -1,0 +1,68 @@
+{
+  "eval_set_id": "reme_artificer_eval_set",
+  "eval_cases": [
+    {
+      "eval_case_id": "scene1_k60_oil_pressure_diagnosis",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Master Artificer, we are in Salisbury Plain Sector Bravo-4. Our FV432 Bulldog Rolls-Royce K60 engine oil pressure gauge has dropped below 20 psi at 1500 rpm. Diagnose the fault, give us the NSN and technical limits, and confirm if we can publish to group chat."
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "🔊 **15s Audio Brief:** Shut down the Rolls-Royce K60 immediately; oil pressure below 20 psi at 1,500 rpm indicates a fatigued relief valve spring (NSN 5360-99-812-1740, minimum free length 38.2 mm). Do NOT pack with washers—this is a Level 2 Unit Repair at Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185, -1.7925). Would you like me to **\"Publish to Group Chat\"**?"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "scene1_jackal2_409_3211_diagnosis",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "We have a Jackal 2 MWMIK at Sector Bravo-4 showing Cummins ISBe SPN 157 FMI 18 (Fault Code 409) and SPN 3251 FMI 0 (Fault Code 3211). What is the repair classification and NSN?"
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "🔊 **15s Audio Brief:** Per AESP 2320-J-204-522, Jackal 2 MWMIK Fault Codes 409 and 3211 require a Level 2 Unit Repair (High-Pressure Fuel Seal) & Level 3 Field Repair (DPF Differential Pressure Sensor) using Seal, High-Pressure Fuel Rail & DPF Sensor Kit (NSN 5330-99-812-4410; fuel rail pressure must hold 300 bar idle, DPF backpressure < 18 kPa, single-use crush seal). Staged at Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185, -1.7925). Would you like me to **\"Publish to Group Chat\"**?"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "scene2_publish_ticket_to_chat",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Publish to Group Chat for our FV432 K60 oil pressure fault at Sector Bravo-4."
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "✅ Ticket TKT-REME-4821 Published to 4 Bn REME Group Chat — Cpl MacDonald (4 Bn REME FRT) dispatched to Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185, -1.7925) with NSN 5360-99-812-1740."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
