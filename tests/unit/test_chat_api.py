@@ -122,6 +122,9 @@ def test_chat_api_ticket_with_prompt_image_and_bq_persistence(mock_bq: MagicMock
     assert r_html.status_code == 200
     assert "FIELD CASUALTY PHOTOGRAPH" in r_html.text
     assert "ticket.image_url" in r_html.text
+    assert '<html lang="en-GB">' in r_html.text
+    assert 'utterance.lang = "en-GB"' in r_html.text
+    assert "READ ALOUD (en-GB)" in r_html.text
 
     client.post("/api/reset")
 

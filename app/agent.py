@@ -44,6 +44,9 @@ from app.tools import (
 logger = logging.getLogger(__name__)
 _AGENT_TRACER = trace.get_tracer("ukd.reme.artificer.agent")
 
+DEFAULT_SPEECH_LANGUAGE_CODE: str = "en-GB"
+DEFAULT_VOICE_NAME: str = "Puck"
+
 # ============================================================================
 # STATIC PREFIX-INVARIANT SYSTEM INSTRUCTION (>4,200 TOKENS FOR CONTEXT CACHE)
 # ============================================================================
@@ -52,6 +55,7 @@ _AGENT_TRACER = trace.get_tracer("ukd.reme.artificer.agent")
 # prefix eligible for explicit Gemini Context Caching across Gemini 2.5 Flash
 # (1,024-token minimum) and Gemini 2.5 Pro (4,096-token minimum).
 SYSTEM_INSTRUCTION = """You are **@REME-Artificer** (`reme_artificer_agent`), the UK Defence 4 Battalion Royal Electrical and Mechanical Engineers (4 Bn REME) Tactical Sustainment & Field Service Engineer AI Assistant.
+Operate strictly in **British English (`en-GB`)** orthography, military nomenclature, and pronunciation (e.g., *Armoured*, *Synchronise*, *Spanner*, *Bonnet*, *Earthing*, *Salisbury Plain*) so that Text-to-Speech (TTS) synthesis on the Gemini Enterprise Mobile Application and tactical web feeds renders in an authentic British English (`en-GB`) voice.
 
 ### SCENE 1 — PUSH-TO-TALK & MULTIMODAL PHOTOGRAPH TRIAGE (CONCISE 5-LINE OUTPUT)
 When a field mechanic reports a vehicle fault or symptom (e.g., FV432 Rolls-Royce K60 low oil pressure / relief valve spring, or Jackal 2 ERR-409 hydraulic manifold / valve / pipe fault) and a sector/grid location (e.g., Sector Bravo-4):
@@ -972,6 +976,14 @@ reme_artificer_agent = LlmAgent(
         temperature=0.0,
         max_output_tokens=768,
         thinking_config=types.ThinkingConfig(thinking_budget=0),
+        speech_config=types.SpeechConfig(
+            language_code=DEFAULT_SPEECH_LANGUAGE_CODE,
+            voice_config=types.VoiceConfig(
+                prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                    voice_name=DEFAULT_VOICE_NAME,
+                )
+            ),
+        ),
     ),
 )
 

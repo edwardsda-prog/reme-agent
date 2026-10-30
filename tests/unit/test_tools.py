@@ -636,6 +636,40 @@ def test_issue_04_gemini_enterprise_uploaded_file_tag_and_discovery_engine_downl
         assert diag["image_url"] == ctx.state["prompt_image_url"]
 
 
+def test_issue_05_british_english_speech_config_and_datastore_locale() -> None:
+    """Verifies Issue 05 Fix: British English ('en-GB') SpeechConfig on reme_artificer_agent and datastore languageInfo."""
+    from unittest.mock import MagicMock, patch
+    from app.agent import (
+        DEFAULT_SPEECH_LANGUAGE_CODE,
+        DEFAULT_VOICE_NAME,
+        SYSTEM_INSTRUCTION,
+        reme_artificer_agent,
+    )
+    from scripts.setup_reme_datastore import create_datastore
+
+    assert DEFAULT_SPEECH_LANGUAGE_CODE == "en-GB"
+    assert "en-GB" in SYSTEM_INSTRUCTION
+    assert "British English" in SYSTEM_INSTRUCTION
+
+    cfg = reme_artificer_agent.generate_content_config
+    assert cfg is not None
+    assert cfg.speech_config is not None
+    assert cfg.speech_config.language_code == "en-GB"
+    assert (
+        cfg.speech_config.voice_config.prebuilt_voice_config.voice_name
+        == DEFAULT_VOICE_NAME
+    )
+
+    mock_post_resp = MagicMock()
+    mock_post_resp.status_code = 200
+    mock_post_resp.json.return_value = {"name": "ds-ukd-reme", "done": True}
+    with patch("scripts.setup_reme_datastore.requests.post", return_value=mock_post_resp) as mock_post:
+        create_datastore(headers={"Authorization": "Bearer test"})
+        posted_payload = mock_post.call_args.kwargs["json"]
+        assert posted_payload.get("languageInfo") == {"languageCode": "en-GB"}
+
+
+
 
 
 

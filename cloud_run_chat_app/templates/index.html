@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -235,6 +235,25 @@
       background: #1d4ed8;
       color: #ffffff;
     }
+    .btn-tts-uk {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      color: #fde68a;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid #f59e0b;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .btn-tts-uk:hover {
+      background: #b45309;
+      color: #ffffff;
+    }
     .ticket-photo-box {
       background: #0f172a;
       padding: 12px;
@@ -292,6 +311,20 @@
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
+    }
+
+    function speakTicketBrief(text) {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(String(text || ""));
+      utterance.lang = "en-GB";
+      const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+      const gbVoice = voices.find(v => String(v.lang || "").toLowerCase().startsWith("en-gb")) ||
+                      voices.find(v => String(v.name || "").toLowerCase().includes("uk") || String(v.name || "").toLowerCase().includes("british"));
+      if (gbVoice) {
+        utterance.voice = gbVoice;
+      }
+      window.speechSynthesis.speak(utterance);
     }
 
     function renderTickets(tickets) {
@@ -370,6 +403,9 @@
                 <span>WGS84: ${Number(ticket.latitude).toFixed(4)}, ${Number(ticket.longitude).toFixed(4)}</span>
               </div>
               <div class="map-actions">
+                <button type="button" class="btn-tts-uk" data-tts="${escapeHtml(`Callsign ${ticket.callsign}. Vehicle Location ${ticket.coords_label}. Grounded Manual ${ticket.aesp_reference}. Demand Component ${ticket.part_name}, NSN ${ticket.nsn}.`)}" onclick="speakTicketBrief(this.getAttribute('data-tts'))">
+                  🔊 READ ALOUD (en-GB)
+                </button>
                 <a class="btn-maps" href="${escapeHtml(mapsDirUrl)}" target="_blank" rel="noopener noreferrer">
                   📍 DISPATCH FRT — GOOGLE MAPS NAVIGATION
                 </a>

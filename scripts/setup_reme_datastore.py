@@ -343,6 +343,9 @@ def create_datastore(
         "industryVertical": "GENERIC",
         "solutionTypes": ["SOLUTION_TYPE_SEARCH"],
         "contentConfig": "CONTENT_REQUIRED",
+        "languageInfo": {
+            "languageCode": "en-GB",
+        },
         "documentProcessingConfig": {
             "defaultParsingConfig": {
                 "ocrParsingConfig": {
