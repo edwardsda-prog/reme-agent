@@ -489,12 +489,13 @@ def test_issue_04_concise_publish_output_and_gcs_prompt_image_upload() -> None:
     ) as mock_post:
         pub_res = publish_ticket_to_chat(tool_context=ctx)
 
+    ticket_id = pub_res["ticket"]["ticket_id"]
     expected_publish_text = (
         "Callsign: Cpl MacDonald (4 Bn REME FRT)\n"
         "Vehicle Location: Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185° N, 1.7925° W)\n"
         "Grounded Manual: AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14)\n"
         "Demand Component: Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711) — NSN: 5360-99-812-1740\n\n"
-        'Next Action: Tap or say "Publish to Group Chat" to broadcast this recovery ticket'
+        f"Status: Fault ticket {ticket_id} published to 4 Bn REME Sustainment Group Chat."
     )
     assert pub_res["formatted_publish_response"] == expected_publish_text
     assert pub_res["ticket"]["image_gcs_uri"].startswith(
@@ -667,6 +668,150 @@ def test_issue_05_british_english_speech_config_and_datastore_locale() -> None:
         create_datastore(headers={"Authorization": "Bearer test"})
         posted_payload = mock_post.call_args.kwargs["json"]
         assert posted_payload.get("languageInfo") == {"languageCode": "en-GB"}
+
+
+def test_issue_06_publish_on_group_chat_acknowledges_and_never_repeats_scene1() -> None:
+    """Verifies Issue 06 Fix: 'Publish on group chat.' acknowledges ticket publication and never repeats Scene 1."""
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.models.llm_response import LlmResponse
+    from google.genai import types
+    import app.tools as tools_mod
+    from app.agent import (
+        fast_path_before_model_callback,
+        transparency_after_model_callback,
+    )
+
+    ctx = DummyToolContext()
+
+    # Turn 1: Exact user query from live session 10939182715978664
+    turn1_prompt = (
+        "Corporal McDonald in sector Bravo, the hydraulic safety valve and pipe are broken on the Jackal."
+    )
+    req_turn1 = LlmRequest(
+        contents=[
+            types.Content(
+                role="user",
+                parts=[types.Part.from_text(text=turn1_prompt)],
+            )
+        ]
+    )
+    assert fast_path_before_model_callback(ctx, req_turn1) is None
+    assert ctx.state.get("_enforce_concise_triage") is True
+    assert ctx.state.get("_enforce_concise_publish") is False
+
+    diag_res = diagnose_and_resolve_grid(
+        fault_query=turn1_prompt,
+        spoken_sector_grid="Sector Bravo",
+        tool_context=ctx,
+    )
+    expected_scene1 = (
+        "Classification: L2 Repair (New Part Required)\n"
+        "AESP Ref: Para 4.12 & Para 4.14 (Torque 45Nm)\n"
+        "NSN: 4820-99-812-4415, 4710-99-812-4420\n"
+        "Coordinates of Sector : 51.2185° N, 1.7925° W\n\n"
+        'Next Action: Tap or say "Publish to Group Chat" to broadcast this recovery ticket'
+    )
+    assert diag_res["formatted_concise_response"] == expected_scene1
+
+    resp_turn1 = transparency_after_model_callback(
+        ctx,
+        LlmResponse(
+            content=types.Content(
+                role="model",
+                parts=[types.Part.from_text(text=expected_scene1)],
+            )
+        ),
+    )
+    assert resp_turn1 is not None
+    assert resp_turn1.content.parts[0].text == expected_scene1
+
+    # Turn 2: User says "Publish on group chat." (exact phrasing that triggered Issue 06)
+    req_turn2 = LlmRequest(
+        contents=[
+            req_turn1.contents[0],
+            types.Content(
+                role="model",
+                parts=[types.Part.from_text(text=expected_scene1)],
+            ),
+            types.Content(
+                role="user",
+                parts=[types.Part.from_text(text="Publish on group chat.")],
+            ),
+        ]
+    )
+    assert fast_path_before_model_callback(ctx, req_turn2) is None
+    assert ctx.state.get("_enforce_concise_publish") is True
+    assert ctx.state.get("_enforce_concise_triage") is False
+
+    mock_bq = MagicMock()
+    mock_bq.insert_rows_json.return_value = []
+    mock_post_resp = MagicMock()
+    mock_post_resp.status_code = 200
+
+    with patch.object(tools_mod, "_BQ_CLIENT", mock_bq), patch(
+        "app.tools.requests.post", return_value=mock_post_resp
+    ):
+        pub_res = publish_ticket_to_chat(tool_context=ctx)
+
+    ticket_id = pub_res["ticket_id"]
+    assert ticket_id.startswith("TKT-REME-")
+    expected_scene2 = (
+        "Callsign: Cpl MacDonald (4 Bn REME FRT)\n"
+        "Vehicle Location: Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185° N, 1.7925° W)\n"
+        "Grounded Manual: AESP 2320-J-100-522, Ch 4, Para 4.12 & Para 4.14 (Page 42)\n"
+        "Demand Component: Hydraulic Safety Relief Valve & High-Pressure Pipe Assembly — NSN: 4820-99-812-4415, 4710-99-812-4420\n\n"
+        f"Status: Fault ticket {ticket_id} published to 4 Bn REME Sustainment Group Chat."
+    )
+    assert pub_res["formatted_publish_response"] == expected_scene2
+
+    # Simulate the ADK post-tool before_model_callback pass with function_response in contents
+    req_turn2_post_tool = LlmRequest(
+        contents=[
+            *req_turn2.contents,
+            types.Content(
+                role="model",
+                parts=[
+                    types.Part.from_function_call(
+                        name="publish_ticket_to_chat", args={}
+                    )
+                ],
+            ),
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_function_response(
+                        name="publish_ticket_to_chat",
+                        response=pub_res,
+                    )
+                ],
+            ),
+        ]
+    )
+    assert fast_path_before_model_callback(ctx, req_turn2_post_tool) is None
+    assert ctx.state.get("_enforce_concise_publish") is True
+    assert ctx.state.get("_enforce_concise_triage") is False
+
+    # Even if the model tries to repeat Scene 1 or output a short sentence, transparency_after_model_callback
+    # must return the Scene 2 acknowledgement and NEVER repeat Scene 1.
+    resp_turn2 = transparency_after_model_callback(
+        ctx,
+        LlmResponse(
+            content=types.Content(
+                role="model",
+                parts=[types.Part.from_text(text=expected_scene1)],
+            )
+        ),
+    )
+    assert resp_turn2 is not None
+    final_turn2_text = resp_turn2.content.parts[0].text
+    assert final_turn2_text == expected_scene2
+    assert "Classification:" not in final_turn2_text
+    assert 'Next Action: Tap or say "Publish to Group Chat"' not in final_turn2_text
+    assert (
+        f"Status: Fault ticket {ticket_id} published to 4 Bn REME Sustainment Group Chat."
+        in final_turn2_text
+    )
+
 
 
 

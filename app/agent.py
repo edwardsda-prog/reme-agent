@@ -75,17 +75,17 @@ Coordinates of Sector : [coords_label]
 
 Next Action: Tap or say "Publish to Group Chat" to broadcast this recovery ticket
 
-### SCENE 2 — ONE-TAP GROUP CHAT BROADCAST (CONCISE 5-LINE OUTPUT)
-When the user says or taps **"Publish to Group Chat"**, **"Publish to Group Chat\" to broadcast this recovery ticket"**, **"Confirm"**, **"Send it"**, or asks to dispatch/publish the ticket:
+### SCENE 2 — ONE-TAP GROUP CHAT BROADCAST (CONCISE 5-LINE ACKNOWLEDGEMENT)
+When the user says or taps **"Publish to Group Chat"**, **"Publish on group chat"**, **"Publish to Group Chat\" to broadcast this recovery ticket"**, **"Confirm"**, **"Send it"**, or asks to dispatch/publish/broadcast the ticket:
 1. Immediately invoke `publish_ticket_to_chat()`.
-2. Render your response using **ONLY** this EXACT concise format (matching `formatted_publish_response` returned by the tool — do NOT emit legacy headers such as `"### ✅ Ticket ..."`, `Casualty Location:`, `Tactical Navigation:`, or any inline `Agent Execution Trace` telemetry footer):
+2. Render your response using **ONLY** this EXACT concise format acknowledging publication (matching `formatted_publish_response` returned by the tool — do NOT repeat the Scene 1 triage card and do NOT emit legacy headers such as `"### ✅ Ticket ..."`, `Casualty Location:`, `Tactical Navigation:`, or any inline `Agent Execution Trace` telemetry footer):
 
 Callsign: [callsign]
 Vehicle Location: [sector_display_name] ([coords_label])
 Grounded Manual: [aesp_reference]
 Demand Component: [part_name] — NSN: [nsn]
 
-Next Action: Tap or say "Publish to Group Chat" to broadcast this recovery ticket
+Status: Fault ticket [ticket_id] published to 4 Bn REME Sustainment Group Chat.
 
 ---
 
@@ -162,8 +162,8 @@ Next Action: Tap or say "Publish to Group Chat" to broadcast this recovery ticke
 
 ---
 
-#### Example 2 — One-Tap Group Chat Ticket Broadcast for FV432 K60 (Scene 2 Concise Output)
-- **User Prompt:** `"Publish to Group Chat" to broadcast this recovery ticket`
+#### Example 2 — One-Tap Group Chat Ticket Broadcast for FV432 K60 (Scene 2 Concise Acknowledgement)
+- **User Prompt:** `"Publish to Group Chat" to broadcast this recovery ticket` (or `"Publish on group chat."`)
 - **Required Tool Call:** `publish_ticket_to_chat()`
 - **Required Assistant Response:**
 Callsign: Cpl MacDonald (4 Bn REME FRT)
@@ -171,7 +171,7 @@ Vehicle Location: Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185° N, 1.7925
 Grounded Manual: AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14)
 Demand Component: Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711) — NSN: 5360-99-812-1740
 
-Next Action: Tap or say "Publish to Group Chat" to broadcast this recovery ticket
+Status: Fault ticket TKT-REME-4102 published to 4 Bn REME Sustainment Group Chat.
 
 ---
 
@@ -371,14 +371,16 @@ _TIER2_AESP_2320_DOC = re.compile(
 )
 
 _LIVE_GRID_OR_PUBLISH_TRIGGER = re.compile(
-    r"\b(sector\s+(?:bravo|alpha|charlie|delta|echo)|publish\s+to\s+group\s+chat|broadcast\s+this\s+recovery\s+ticket|send\s+it)\b",
+    r"\b(sector\s+(?:bravo|alpha|charlie|delta|echo)|publish(?:\s+(?:it|this|ticket|fault))?(?:\s+(?:to|on|in|into))?(?:\s+the)?\s+(?:group\s+)?chat|publish\s+(?:this\s+|the\s+)?(?:recovery\s+)?(?:ticket|fault)|broadcast\s+(?:this\s+)?(?:recovery\s+)?ticket|send\s+(?:it|to\s+(?:group\s+)?chat)|dispatch\s+(?:it|ticket)|confirm(?:\s+publish)?)\b",
     re.IGNORECASE,
 )
 
 _PUBLISH_INTENT_TRIGGER = re.compile(
-    r"\b(publish\s+to\s+group\s+chat|broadcast\s+this\s+recovery\s+ticket|send\s+it|confirm\s+publish|broadcast\s+ticket)\b",
+    r"\b(publish(?:\s+(?:it|this|ticket|fault))?(?:\s+(?:to|on|in|into))?(?:\s+the)?\s+(?:group\s+)?chat|publish\s+(?:this\s+|the\s+)?(?:recovery\s+)?(?:ticket|fault)|broadcast\s+(?:this\s+)?(?:recovery\s+)?ticket|send\s+(?:it|to\s+(?:group\s+)?chat)|dispatch\s+(?:it|ticket)|confirm(?:\s+publish)?)\b",
     re.IGNORECASE,
 )
+
+_TICKET_ID_RE = re.compile(r"\b(TKT-REME-[A-Z0-9]{4,10})\b", re.IGNORECASE)
 
 _USER_UPLOADED_FILE_TAG_RE = re.compile(
     r"<(?:start|end)_of_user_uploaded_file:\s*([^>\n]+)>",
@@ -426,6 +428,21 @@ def _extract_latest_user_text(llm_request: LlmRequest) -> str:
             if texts:
                 return " ".join(texts).strip()
     return ""
+
+
+def _latest_function_response_name(llm_request: LlmRequest) -> Optional[str]:
+    """Returns the tool name if the latest turn in LlmRequest.contents contains a function_response."""
+    if not llm_request or not getattr(llm_request, "contents", None):
+        return None
+    latest_content = llm_request.contents[-1]
+    parts = getattr(latest_content, "parts", None) or []
+    for part in reversed(parts):
+        fn_resp = getattr(part, "function_response", None)
+        if fn_resp is not None:
+            name = getattr(fn_resp, "name", None)
+            if name:
+                return str(name)
+    return None
 
 
 def _extract_multimodal_image_payload(
@@ -583,6 +600,17 @@ def fast_path_before_model_callback(
       flagging Scene 1 triage vs Scene 2 publish turns for strict 5-line concise output enforcement.
     """
     t0 = time.perf_counter()
+    latest_fn_resp = _latest_function_response_name(llm_request)
+    if latest_fn_resp:
+        if callback_context is not None and getattr(callback_context, "state", None) is not None:
+            if latest_fn_resp == "publish_ticket_to_chat":
+                callback_context.state["_enforce_concise_publish"] = True
+                callback_context.state["_enforce_concise_triage"] = False
+            elif latest_fn_resp == "diagnose_and_resolve_grid":
+                callback_context.state["_enforce_concise_triage"] = True
+                callback_context.state["_enforce_concise_publish"] = False
+        return None
+
     has_photo = _has_multimodal_image_part(llm_request)
     uploaded_filename = _extract_uploaded_filename(llm_request)
     if callback_context is not None and getattr(callback_context, "state", None) is not None:
@@ -702,12 +730,41 @@ def fast_path_before_model_callback(
 def _build_concise_publish_from_state_or_text(
     active_ticket: Optional[dict],
     combined_text: str,
+    last_published_ticket: Optional[dict] = None,
 ) -> str:
     """Builds the exact 5-line Scene 2 publish output from session state or raw model text."""
+    ticket_id: Optional[str] = None
+    if isinstance(last_published_ticket, dict):
+        raw_tid = last_published_ticket.get("ticket_id")
+        if isinstance(raw_tid, str) and raw_tid.strip():
+            ticket_id = raw_tid.strip()
+        formatted_pub = last_published_ticket.get("formatted_publish_response")
+        if (
+            isinstance(formatted_pub, str)
+            and formatted_pub.strip()
+            and "Status: Fault ticket" in formatted_pub
+        ):
+            return formatted_pub.strip()
+
     if isinstance(active_ticket, dict):
+        if not ticket_id:
+            raw_tid = active_ticket.get("ticket_id")
+            if isinstance(raw_tid, str) and raw_tid.strip():
+                ticket_id = raw_tid.strip()
         formatted = active_ticket.get("formatted_publish_response")
-        if isinstance(formatted, str) and formatted.strip():
+        if (
+            isinstance(formatted, str)
+            and formatted.strip()
+            and "Status: Fault ticket" in formatted
+        ):
             return formatted.strip()
+
+    if not ticket_id and combined_text:
+        m_tid = _TICKET_ID_RE.search(combined_text)
+        if m_tid:
+            ticket_id = m_tid.group(1).upper()
+
+    if isinstance(active_ticket, dict):
         if any(
             active_ticket.get(k)
             for k in ("part_name", "nsn", "aesp_reference", "sector_display_name", "coords_label")
@@ -737,6 +794,7 @@ def _build_concise_publish_from_state_or_text(
                     f"{active_ticket.get('part_name', 'Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711)')} — "
                     f"NSN: {active_ticket.get('nsn', '5360-99-812-1740')}"
                 ),
+                ticket_id=ticket_id,
             )
 
     callsign = "Cpl MacDonald (4 Bn REME FRT)"
@@ -770,6 +828,7 @@ def _build_concise_publish_from_state_or_text(
         vehicle_location=vehicle_location,
         grounded_manual=grounded_manual,
         demand_component=demand_component,
+        ticket_id=ticket_id,
     )
 
 
@@ -805,6 +864,7 @@ def transparency_after_model_callback(
     turn_ms = round((time.perf_counter() - t0) * 1000.0, 2) if isinstance(t0, float) else 0.0
 
     active_ticket = state.get("active_ticket") if has_state_get else None
+    last_published_ticket = state.get("last_published_ticket") if has_state_get else None
     telemetry = (
         active_ticket.get("execution_telemetry")
         if isinstance(active_ticket, dict)
@@ -840,15 +900,21 @@ def transparency_after_model_callback(
             "Casualty Location:",
             "Demand Component:",
             "Tactical Navigation:",
+            "Status: Fault ticket",
+            "published to 4 Bn REME",
+            "Sustainment Group Chat",
         )
     )
 
-    # Issue 04 Fix: Scene 2 publish returns ONLY the 5-line concise publish output
-    # (using Vehicle Location: and suppressing Casualty Location:, Tactical Navigation:, and Agent Execution Trace)
+    # Issue 04 & 06 Fix: Scene 2 publish returns ONLY the 5-line concise publish acknowledgement
+    # (using Vehicle Location: and Status: Fault ticket ... published to 4 Bn REME Sustainment Group Chat.)
     if is_scene2_publish:
         concise_publish_text = _build_concise_publish_from_state_or_text(
             active_ticket if isinstance(active_ticket, dict) else None,
             combined,
+            last_published_ticket=last_published_ticket
+            if isinstance(last_published_ticket, dict)
+            else None,
         )
         last_text_idx = -1
         for idx, part in enumerate(parts):

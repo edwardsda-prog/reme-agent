@@ -115,14 +115,35 @@ def format_concise_publish_output(
     aesp_reference: str = "AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14)",
     part_name: str = "Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711)",
     nsn: str = "5360-99-812-1740",
+    ticket_id: Optional[str] = None,
+    *,
+    vehicle_location: Optional[str] = None,
+    grounded_manual: Optional[str] = None,
+    demand_component: Optional[str] = None,
 ) -> str:
-    """Renders the exact concise Scene 2 publish response defined in Issue-04."""
+    """Renders the exact concise Scene 2 publish acknowledgement response defined in Issue-04 & Issue-06."""
+    loc_line = (
+        vehicle_location
+        if vehicle_location
+        else f"{sector_display_name} ({coords_label})"
+    )
+    manual_line = grounded_manual if grounded_manual else aesp_reference
+    comp_line = (
+        demand_component
+        if demand_component
+        else f"{part_name} — NSN: {nsn}"
+    )
+    status_line = (
+        f"Status: Fault ticket {ticket_id} published to 4 Bn REME Sustainment Group Chat."
+        if ticket_id
+        else "Status: Fault ticket published to 4 Bn REME Sustainment Group Chat."
+    )
     return (
         f"Callsign: {callsign}\n"
-        f"Vehicle Location: {sector_display_name} ({coords_label})\n"
-        f"Grounded Manual: {aesp_reference}\n"
-        f"Demand Component: {part_name} — NSN: {nsn}\n\n"
-        'Next Action: Tap or say "Publish to Group Chat" to broadcast this recovery ticket'
+        f"Vehicle Location: {loc_line}\n"
+        f"Grounded Manual: {manual_line}\n"
+        f"Demand Component: {comp_line}\n\n"
+        f"{status_line}"
     )
 
 

@@ -4,9 +4,9 @@
 
 | Field | Specification Value |
 | :--- | :--- |
-| **Document ID** | `SDD-DEMO1-ADK2-005` (As-Built Solutions Design incorporating Fixes 01–05) |
+| **Document ID** | `SDD-DEMO1-ADK2-006` (As-Built Solutions Design incorporating Fixes 01–06) |
 | **Programme & Use Case** | **Pixel Roots — Demo 1: The Tactical Sustainment JNCO ("Snap, Diagnose, Pin & Demand")** |
-| **Primary Sources of Truth** | [AGENTS.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/AGENTS.md), [Demo 1 - SA.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/Demo%201%20-%20SA.md), [implementation-plan.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/implementation-plan.md), [issue-01-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-01-fix.md), [issue-02-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-02-fix.md), [issue-03-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-03-fix.md), [issue-04-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-04-fix.md), [issue-05-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-05-fix.md) |
+| **Primary Sources of Truth** | [AGENTS.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/AGENTS.md), [Demo 1 - SA.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/Demo%201%20-%20SA.md), [implementation-plan.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/implementation-plan.md), [issue-01-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-01-fix.md), [issue-02-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-02-fix.md), [issue-03-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-03-fix.md), [issue-04-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-04-fix.md), [issue-05-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-05-fix.md), [issue-06-fix.md](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/docs/architecture/issue-06-fix.md) |
 | **Target GCP Project** | `antig-dave` (`284046449012`) |
 | **Regional Compute & Storage** | **`europe-west1` (Belgium)** — Vertex AI (`gemini-2.5-flash`), Vertex AI Agent Engine (`6397856951400660992`), Agent Registry, Cloud Run (`reme-chat-demonstrator`), BigQuery (`ukd_reme_demo`), Cloud Storage (`gs://antig-dave-reme-ticket-images-eu`) |
 | **Multi-Region Search & Gemini App** | **`eu` (European Union)** — Discovery Engine Datastore (`ukd-reme-aesp-ds`, `languageCode: "en-GB"`) & Gemini Enterprise App (`pixel-mobile-demos_1793177711952`) |
@@ -178,9 +178,9 @@ When the soldier submits a photograph and/or damage description, the agent evalu
 
 ---
 
-### 4.4 Scene 2 Concise Publish Output & End-to-End Field Photograph Pipeline — Issue 04 Design
+### 4.4 Scene 2 Concise Publish Acknowledgement & End-to-End Field Photograph Pipeline — Issue 04 & Issue 06 Design
 
-When the soldier says or taps **"Publish to Group Chat"**, the system executes the Scene 2 handoff via [`publish_ticket_to_chat()`](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/app/tools.py#L990-L1140) and enforces the exact 5-line confirmation via [`format_concise_publish_output()`](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/app/schemas.py#L166-L189):
+When the soldier says or taps **"Publish to Group Chat"** (or natural variants such as **"Publish on group chat."**, **"Publish in the chat"**, **"Send it"**, **"Confirm"**), the system executes the Scene 2 handoff via [`publish_ticket_to_chat()`](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/app/tools.py#L815-L945), flips `_enforce_concise_publish = True` / `_enforce_concise_triage = False` in both the tool and post-tool [`fast_path_before_model_callback()`](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/app/agent.py#L590-L615) (`_latest_function_response_name`), and enforces the exact 5-line publication acknowledgement via [`format_concise_publish_output()`](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/app/schemas.py#L46-L78):
 
 ```text
 Callsign: Cpl MacDonald (4 Bn REME FRT)
@@ -188,7 +188,7 @@ Vehicle Location: Salisbury Plain (SPTA) — Sector Bravo-4 (51.2185° N, 1.7925
 Grounded Manual: AESP 2350-T-250-523, Ch 1-2, Para 17.4 (Page 14)
 Demand Component: Oil Pressure Relief Valve Spring (IPC Army Code 14660 Cat 711) — NSN: 5360-99-812-1740
 
-Next Action: Tap or say "Publish to Group Chat" to broadcast this recovery ticket
+Status: Fault ticket TKT-REME-4102 published to 4 Bn REME Sustainment Group Chat.
 ```
 
 #### End-to-End Prompt Photograph Persistence & Rendering Flow
@@ -263,7 +263,7 @@ A unified IAM model governs Vertex AI Agent Engine (`AGENT_IDENTITY`) and Google
 
 ### 7.1 Automated Test Suite Coverage (`tests/`)
 
-- **Unit Tests ([test_tools.py](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/tests/unit/test_tools.py), [test_chat_api.py](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/tests/unit/test_chat_api.py)):** **14/14 passing** — Verify `diagnose_and_resolve_grid`, `publish_ticket_to_chat`, golden-path fallbacks, parallel fan-out, Issue 02 fast-path TTFT (`< 5 ms`), Issue 03 concise 5-line triage & multimodal damage profiles, Issue 04 GCS image upload + Gemini Enterprise `:downloadFile` extraction + BigQuery 15/13-column CRUD + FastAPI `/api/ticket-image/{blob_path}` rendering, and Issue 05 British English (`en-GB`) `SpeechConfig`, datastore `languageInfo`, and Web Speech API (`utterance.lang = "en-GB"`).
+- **Unit Tests ([test_tools.py](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/tests/unit/test_tools.py), [test_chat_api.py](file:///usr/local/google/home/edwardsda/Documents/Demo%201%20-%20Reme/tests/unit/test_chat_api.py)):** **15/15 passing** — Verify `diagnose_and_resolve_grid`, `publish_ticket_to_chat`, golden-path fallbacks, parallel fan-out, Issue 02 fast-path TTFT (`< 5 ms`), Issue 03 concise 5-line triage & multimodal damage profiles, Issue 04 GCS image upload + Gemini Enterprise `:downloadFile` extraction + BigQuery 15/13-column CRUD + FastAPI `/api/ticket-image/{blob_path}` rendering, Issue 05 British English (`en-GB`) `SpeechConfig`, datastore `languageInfo`, and Web Speech API (`utterance.lang = "en-GB"`), and Issue 06 Scene 2 publication acknowledgement (`Status: Fault ticket TKT-REME-XXXX published to 4 Bn REME Sustainment Group Chat.`) without repeating Scene 1.
 - **5-Tier End-to-End Suite (`tests/e2e/test_tier1_features.py` through `test_tier5_adversarial.py`):** Covers Tier 1 feature contracts, Tier 2 boundary conditions, Tier 3 pairwise combinations, Tier 4 live user scenarios (Scenarios 1–16 covering Issues 01–04), and Tier 5 adversarial/SQL-injection resilience.
 
 ### 7.2 Live Production Benchmarks (`europe-west1` & `eu`)
@@ -274,5 +274,5 @@ A unified IAM model governs Vertex AI Agent Engine (`AGENT_IDENTITY`) and Google
 | **Tier 1 Capability Fast-Path (Issue 02)** | `"What is your operational capability"` | **`0.06 ms`** in-callback TTFT (`2.30 ms` local runner; `578.90 ms` remote SSE) |
 | **Tier 2 AESP Summary Fast-Path (Issue 02)** | `"Summarise the contents of 2350-T-250-523.pdf"` | **`0.05 ms`** in-callback TTFT (`2.36 ms` local runner; `497.77 ms` remote SSE) |
 | **Scene 1 Concise Triage & Photo Assessment (Issue 03)** | Vertex AI Agent Engine `6397856951400660992` | Exact 5-line output (`Classification:`, `AESP Ref:`, `NSN:`, `Coordinates of Sector :`, `Next Action:`); supports `L1 Field Fix` (`N/A`) and multi-part `L2 Repair` (`4820-99-812-4415, 4710-99-812-4420`) |
-| **Scene 2 Concise Publish & Photo Ticket (Issue 04)** | `https://reme-chat-demonstrator-kbgxhnyxlq-ew.a.run.app` | Exact 5-line publish output (`Callsign:`, `Vehicle Location:`, `Grounded Manual:`, `Demand Component:`, `Next Action:`); prompt photo saved to `gs://antig-dave-reme-ticket-images-eu`, inserted into BigQuery, and rendered (`HTTP 200 image/png`) in the Group Chat ticket card |
+| **Scene 2 Concise Publish & Photo Ticket (Issue 04 & Issue 06)** | `https://reme-chat-demonstrator-kbgxhnyxlq-ew.a.run.app` | Exact 5-line publish acknowledgement (`Callsign:`, `Vehicle Location:`, `Grounded Manual:`, `Demand Component:`, `Status: Fault ticket TKT-REME-XXXX published to 4 Bn REME Sustainment Group Chat.`); prompt photo saved to `gs://antig-dave-reme-ticket-images-eu`, inserted into BigQuery, and rendered (`HTTP 200 image/png`) in the Group Chat ticket card |
 | **British English (`en-GB`) Speech & Locale (Issue 05)** | `reme_artificer_agent` + `ukd-reme-aesp-ds` + Cloud Run UI | `SpeechConfig(language_code="en-GB")`, `languageInfo={"languageCode": "en-GB"}`, `<html lang="en-GB">`, and `utterance.lang = "en-GB"` verified across unit tests |

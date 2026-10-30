@@ -799,6 +799,8 @@ def diagnose_and_resolve_grid(
                 hit_payload["image_url"] = prompt_image_url
             if tool_context is not None and getattr(tool_context, "state", None) is not None:
                 tool_context.state["active_ticket"] = dict(hit_payload)
+                tool_context.state["_enforce_concise_triage"] = True
+                tool_context.state["_enforce_concise_publish"] = False
             return hit_payload
 
     with _TRACER.start_as_current_span("reme.diagnose_and_resolve_grid") as span:
@@ -989,6 +991,8 @@ def diagnose_and_resolve_grid(
             _TRIAGE_TTL_CACHE[cache_key] = (time.monotonic(), cacheable_dict)
         if tool_context is not None and getattr(tool_context, "state", None) is not None:
             tool_context.state["active_ticket"] = dict(result_dict)
+            tool_context.state["_enforce_concise_triage"] = True
+            tool_context.state["_enforce_concise_publish"] = False
         return result_dict
 
 
@@ -1078,6 +1082,7 @@ def publish_ticket_to_chat(tool_context: ToolContext) -> dict[str, Any]:
         aesp_reference=aesp_reference,
         part_name=part_name,
         nsn=nsn,
+        ticket_id=ticket_id,
     )
 
     payload = TicketPayload(
@@ -1165,9 +1170,17 @@ def publish_ticket_to_chat(tool_context: ToolContext) -> dict[str, Any]:
 
     if tool_context is not None and getattr(tool_context, "state", None) is not None:
         tool_context.state["last_published_ticket"] = record
+        tool_context.state["_enforce_concise_publish"] = True
+        tool_context.state["_enforce_concise_triage"] = False
+        if isinstance(state_dict, dict):
+            updated_active = dict(state_dict)
+            updated_active["ticket_id"] = ticket_id
+            updated_active["formatted_publish_response"] = formatted_publish
+            tool_context.state["active_ticket"] = updated_active
 
     return {
         "published": True,
+        "ticket_id": ticket_id,
         "ticket": record,
         "formatted_publish_response": formatted_publish,
         "confirmation_badge": f"✅ Ticket {ticket_id} Published to 4 Bn REME Group Chat",
